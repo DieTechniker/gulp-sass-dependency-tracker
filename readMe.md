@@ -11,7 +11,7 @@ Firstly, here's a quick example:
 
 ```js
 // Sass-Dependency-Tracker for partial recompilation
-const SassDepTracker = require('gulp-sass-dependency-tracker');
+const SassDepTracker = require('@dietechniker/gulp-sass-dependency-tracker');
 const sassDepTracker = new SassDepTracker();
 
 const fileGlob = 'resources/sass/**/*.scss';
