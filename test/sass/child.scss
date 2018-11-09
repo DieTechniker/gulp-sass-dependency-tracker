@@ -1,0 +1,6 @@
+@import "parent";
+@import "partial";
+
+.the-element {
+  @extend %the-element
+}
