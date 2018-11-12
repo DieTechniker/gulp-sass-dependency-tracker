@@ -49,7 +49,8 @@ class DependencyTracker {
     constructor(options) {
         this.sass_tree = new Map();
         this.options = options || {
-            debug: false
+            debug: false,
+            suppressOutput: false
         }
     }
 
@@ -58,6 +59,13 @@ class DependencyTracker {
      */
     isDebug() {
         return this.options.debug || false;
+    }
+
+    /**
+     * Internal function for checking if the output should be suppressed.
+     */
+    isOutputSuppressed() {
+        return this.options.suppressOutput || false;
     }
 
     /**
@@ -95,11 +103,34 @@ class DependencyTracker {
     logFiles() {
         let me = this;
         return map(function (file, cb) {
-            let filepath = path.normalize(file.path);
-            log.info(c.debug(`Will be compiling: ${filepath}`));
-            me.getOrCreateEntry(filepath).set('recompile', false);
+            if (!me.isOutputSuppressed()) {
+                let filepath = path.normalize(file.path);
+                log.info(c.debug(`Will be compiling: ${filepath}`));
+            }
             return cb(null, file);
         });
+    }
+
+    /**
+     * Reports a file as compiled so it does not get recompiled the next time.
+     * Call this after the sass compilation.
+     *
+     * @returns {stream}
+     */
+    reportCompiled() {
+        let me = this;
+        return map(function (file, cb) {
+            let filepath = path.normalize(file.path);
+            me.getOrCreateEntry(filepath).set('recompile', false);
+            cb(null, file)
+        })
+    }
+
+    /**
+     * Resets the dependency tracker to its initial state after construction.
+     */
+    reset() {
+        this.sass_tree.clear();
     }
 
     /**
@@ -176,7 +207,10 @@ class DependencyTracker {
         let filepath = (typeof file === 'string') ? file : file.path;
         filepath = path.normalize(filepath);
 
-        log.info(c.info(`Queuing ${filepath} for rebuild.`));
+        if (!this.isOutputSuppressed()) {
+            log.info(c.info(`Queuing ${filepath} for rebuild.`));
+        }
+
         let mapEntry = this.getOrCreateEntry(filepath);
         mapEntry.set('recompile',true);
 
@@ -198,6 +232,18 @@ class DependencyTracker {
 
         this.sass_tree.forEach(rebuildCheck);
         rebuildDepends.forEach(rebuildQueue);
+    }
+
+    /**
+     * Accessor for the dependency tree.
+     * This is mainly used in our test cases.
+     * We strongly advice you against using this.
+     *
+     * @returns {Map<String, Object>}
+     * @deprecated As an advice to not use this.
+     */
+    getTree() {
+        return this.sass_tree;
     }
 }
 
