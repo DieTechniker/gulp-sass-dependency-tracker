@@ -104,8 +104,8 @@ class DependencyTracker {
         let me = this;
         return map(function (file, cb) {
             if (!me.isOutputSuppressed()) {
-                let filepath = path.normalize(file.path);
-                log.info(c.debug(`Will be compiling: ${filepath}`));
+                let filePath = path.normalize(file.path);
+                log.info(c.debug(`Will be compiling: ${filePath}`));
             }
             return cb(null, file);
         });
@@ -128,7 +128,7 @@ class DependencyTracker {
                     me.getOrCreateEntry(filePath).set('recompile', false);
 
                     if (me.isDebug()) {
-                        log.info(`Compiled: ${filePath}`);
+                        log.info(c.debug(`Compiled: ${filePath}`));
                     }
                 }
             }
@@ -201,10 +201,10 @@ class DependencyTracker {
      * @returns {boolean}
      */
     needsRebuild(file) {
-        let filepath = (typeof  file === 'string') ? file : file.path;
-        filepath = path.normalize(filepath);
+        let filePath = (typeof  file === 'string') ? file : file.path;
+        filePath = path.normalize(filePath);
 
-        return this.getOrCreateEntry(filepath).get('recompile') === true;
+        return this.getOrCreateEntry(filePath).get('recompile') === true;
     }
 
     /**
@@ -214,20 +214,20 @@ class DependencyTracker {
      * @param file A Vinyl file or a normalized absolute path.
      */
     queueRebuild(file) {
-        let filepath = (typeof file === 'string') ? file : file.path;
-        filepath = path.normalize(filepath);
+        let filePath = (typeof file === 'string') ? file : file.path;
+        filePath = path.normalize(filePath);
 
         if (!this.isOutputSuppressed()) {
-            log.info(c.info(`Queuing ${filepath} for rebuild.`));
+            log.info(c.info(`Queuing ${filePath} for rebuild.`));
         }
 
-        let mapEntry = this.getOrCreateEntry(filepath);
+        let mapEntry = this.getOrCreateEntry(filePath);
         mapEntry.set('recompile',true);
 
         let rebuildDepends = [];
         let rebuildCheck = (entry, key, map) => {
             let dependencies = entry.get('dependencies');
-            if (entry.get('recompile') === false && dependencies.includes(filepath)) {
+            if (entry.get('recompile') === false && dependencies.includes(filePath)) {
                 rebuildDepends.push(key);
 
                 if (this.isDebug()) {
