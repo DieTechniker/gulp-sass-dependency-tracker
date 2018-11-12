@@ -120,8 +120,18 @@ class DependencyTracker {
     reportCompiled() {
         let me = this;
         return map(function (file, cb) {
-            let filepath = path.normalize(file.path);
-            me.getOrCreateEntry(filepath).set('recompile', false);
+            // Support for renaming files.
+            // Search for the earliest name ending in the scss extension.
+            for (let filePath of file.history) {
+                if (filePath.endsWith('.scss')) {
+                    filePath = path.normalize(filePath);
+                    me.getOrCreateEntry(filePath).set('recompile', false);
+
+                    if (me.isDebug()) {
+                        log.info(`Compiled: ${filePath}`);
+                    }
+                }
+            }
             cb(null, file)
         })
     }

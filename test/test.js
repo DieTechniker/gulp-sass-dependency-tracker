@@ -4,6 +4,7 @@
 const assert = require('assert');
 
 const gulp = require('gulp');
+const gRename = require('gulp-rename');
 const map = require('map-stream');
 const Vinyl = require('vinyl');
 
@@ -67,6 +68,14 @@ let getDependencies = () => {
     return getEntry().get('dependencies');
 };
 
+let aggregateFilesFromStream = function(files) {
+    return map(function (file, cb) {
+        let filePath = path.normalize(file.path);
+        files.push(filePath);
+        return cb(null, file);
+    });
+};
+
 // --- Mocha tests --- //
 
 describe('SassDependencyTracker', function () {
@@ -101,14 +110,6 @@ describe('SassDependencyTracker', function () {
     });
 
     describe('#filter()', function () {
-        let aggregateFilesFromStream = function(files) {
-            return map(function (file, cb) {
-                let filePath = path.normalize(file.path);
-                files.push(filePath);
-                return cb(null, file);
-            });
-        };
-
         it('will include no file for no changes', function () {
             let files = [];
             gulp.src(globPattern)
@@ -145,5 +146,26 @@ describe('SassDependencyTracker', function () {
                 assert(!files.includes(path.normalize(unrelated.path)), 'Unrelated not filtered!');
             });
         })
-    })
+    });
+
+    describe('#reportCompiled()', function () {
+        it('will remove files from being dirty upon recompilation - even if renamed', function () {
+
+            let files = [];
+            return new Promise(function (resolve, reject) {
+                gulp.src(globPattern)
+                    .pipe(gRename(function (file) {
+                        file.extname += '.css'
+                    }))
+                    .pipe(dependencyTracker.reportCompiled())
+                    .on('end', function () {
+                        resolve();
+                    })
+                    .on('error', reject);
+            }).then(function () {
+                assert.strictEqual(getEntry(path.normalize(child.path)).get('recompile'), false, 'Child still dirty!');
+                assert.strictEqual(getEntry(path.normalize(partialParent.path)).get('recompile'), false, 'Partial still dirty!');
+            });
+        })
+    });
 });
