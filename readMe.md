@@ -88,6 +88,7 @@ There are two kinds of options:
 2. Module options with:  
   ```js
     {
-      debug: false // Whether or not to provide debug log message (e.g. from the dependency detection)
+      debug: false // Whether or not to provide debug log message (e.g. from the dependency detection)  
+      suppressOutput: false // Whether or not to suppress all console messages (does not apply to debug output!)
     }
   ```
