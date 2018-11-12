@@ -1,4 +1,4 @@
-# GulpSassDependencyTracker
+# GulpSassDependencyTracker [![GitHub version](https://badge.fury.io/gh/DieTechniker%2Fgulp-sass-dependency-tracker.svg)](https://badge.fury.io/gh/DieTechniker%2Fgulp-sass-dependency-tracker) [![npm version](https://badge.fury.io/js/%40dietechniker%2Fgulp-sass-dependency-tracker.svg)](https://badge.fury.io/js/%40dietechniker%2Fgulp-sass-dependency-tracker)
 
 A NodeJS module for keeping things easy in sass tasks for Gulp.  
 This gulp plugin filters the file stream to include only scss files that have to be recompiled.  
@@ -23,6 +23,7 @@ gulp.task('sass', function () {
                 .pipe(sassDepTracker.inspect(sassOptions))
                 .pipe(sassDepTracker.logFiles())
                 .pipe(sass(sassOptions).on('error', sass.logError))
+                .pipe(sassDepTracker.reportCompiled())
                 .pipe(gulp.dest('.'))
 });
 
@@ -50,7 +51,9 @@ As you can see, we have four main things to register in order to get things flyi
 2. Pipe the stream into ``DependencyTracker#filter()``  
   2.1 Optionally pipe through ``DependencyTracker#logFiles()`` if you want a notification about whats left in the stream.
 3. Pipe the stream into ``DependencyTracker#inspect(<sassOptions>)``  
-4. Notify the sass helper when a file is removed or changed so we can mark them dirty.  
+4. Pipe the stream into ``gulp-sass`` or any similar compilation package.
+5. Pipe the stream into ``DependencyTracker#reportCompiled()`` to mark them as compiled.
+6. Notify the sass helper when a file is removed or changed so we can mark them dirty.  
 
 Note: On the first run all files in the stream are marked dirty as none of them have been analyzed yet.
 
