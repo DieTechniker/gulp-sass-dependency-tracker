@@ -35,23 +35,31 @@ if (colorSupport.level > 0) {
     c.error = dummy;
 }
 
+const SassDependencyTree = require('./dependency-tree');
+
 const importRegex = /@import ['"]([\w./-]+)['"];/g;
 
 /**
  * Main class of a helpful module for sass compilation tasks with GulpJS.
  * For the full module documentation please consult the readMe.md file.
+ *
+ * @property sassTree {SassDependencyTree} Manager of the dependency tree. Please use {@link getTree} instead of directly accessing this property so the contract can be upheld!
  */
 class DependencyTracker {
+
+    // --- Private fields --- //
+
+    // TODO: Use when supported by Node.
+    //#sassTree;
+
+    // --- Public methods --- //
 
     /**
      * Constructs a new tracker instance.
      */
-    constructor(options) {
-        this.sass_tree = new Map();
-        this.options = options || {
-            debug: false,
-            suppressOutput: false
-        }
+    constructor(options = {debug: false, suppressOutput: false}) {
+        this.sassTree = new SassDependencyTree(options);
+        this.options = options;
     }
 
     /**
@@ -76,7 +84,7 @@ class DependencyTracker {
     filter() {
         const me = this;
         return gIgnore.include(function (file) {
-            return !file.path.endsWith('.scss') || me.needsRebuild(file);
+            return !file.path.endsWith('.scss') || !me.getTree().isCompiled(file);
         });
     }
 
@@ -124,12 +132,7 @@ class DependencyTracker {
             // Search for the earliest name ending in the scss extension.
             for (let filePath of file.history) {
                 if (filePath.endsWith('.scss')) {
-                    filePath = path.normalize(filePath);
-                    me.getOrCreateEntry(filePath).set('recompile', false);
-
-                    if (me.isDebug()) {
-                        log.info(c.debug(`Compiled: ${filePath}`));
-                    }
+                    me.getTree().markAsCompiled(filePath);
                 }
             }
             cb(null, file)
@@ -140,7 +143,7 @@ class DependencyTracker {
      * Resets the dependency tracker to its initial state after construction.
      */
     reset() {
-        this.sass_tree.clear();
+        this.sassTree.clear();
     }
 
     /**
@@ -167,10 +170,7 @@ class DependencyTracker {
         }
 
         if (importFilePath) {
-            this.getOrCreateEntry(filePath).get('dependencies').push(importFilePath);
-            if (this.isDebug()) {
-                log.info(c.debug(`${file.path} =dep=> ${importFilePath}`));
-            }
+            this.sassTree.addDependency(file, importFilePath);
 
         } else {
             log.warn(c.warn(`Unable to resolve dependency "${importPath} for ${filePath}`));
@@ -178,33 +178,12 @@ class DependencyTracker {
     }
 
     /**
-     * Convenience function to gracefully get entries from the internal mapping.
-     *
-     * @param normalizedPath Normalized absolute file path.
-     * @returns {Map}
-     */
-    getOrCreateEntry(normalizedPath) {
-        if (!this.sass_tree.has(normalizedPath)) {
-            let entry = new Map();
-            entry.set('recompile', true);
-            entry.set('dependencies', []);
-            this.sass_tree.set(normalizedPath, entry);
-        }
-
-        return this.sass_tree.get(normalizedPath);
-    }
-
-    /**
      * Returns whether or not a file has been marked for a rebuild.
-     *
-     * @param file A Vinyl file or a normalized absolute path.
-     * @returns {boolean}
+     * @see SassDependencyTree#isCompiled for more information.
+     * @param file {Vinyl|Map|string|object}
      */
     needsRebuild(file) {
-        let filePath = (typeof  file === 'string') ? file : file.path;
-        filePath = path.normalize(filePath);
-
-        return this.getOrCreateEntry(filePath).get('recompile') === true;
+        return this.sassTree.isCompiled(file);
     }
 
     /**
@@ -214,46 +193,17 @@ class DependencyTracker {
      * @param file A Vinyl file or a normalized absolute path.
      */
     queueRebuild(file) {
-        let filePath = (typeof file === 'string') ? file : file.path;
-        filePath = path.normalize(filePath);
-
-        if (!this.isOutputSuppressed()) {
-            log.info(c.info(`Queuing ${filePath} for rebuild.`));
-        }
-
-        let mapEntry = this.getOrCreateEntry(filePath);
-        mapEntry.set('recompile',true);
-
-        let rebuildDepends = [];
-        let rebuildCheck = (entry, key, map) => {
-            let dependencies = entry.get('dependencies');
-            if (entry.get('recompile') === false && dependencies.includes(filePath)) {
-                rebuildDepends.push(key);
-
-                if (this.isDebug()) {
-                    log.info(c.debug(`Found dependency: ${key}`));
-                }
-            }
-        };
-
-        let rebuildQueue = entry => {
-            this.queueRebuild(entry);
-        };
-
-        this.sass_tree.forEach(rebuildCheck);
-        rebuildDepends.forEach(rebuildQueue);
+        this.sassTree.markAsNotCompiled(file);
     }
 
     /**
      * Accessor for the dependency tree.
-     * This is mainly used in our test cases.
-     * We strongly advice you against using this.
+     * Use its public contract for manually adding/removing dependencies and/or marking compilation state.
      *
-     * @returns {Map<String, Object>}
-     * @deprecated As an advice to not use this.
+     * @returns {SassDependencyTree}
      */
     getTree() {
-        return this.sass_tree;
+        return this.sassTree;
     }
 }
 
