@@ -1,6 +1,6 @@
 {
   "name": "@dietechniker/gulp-sass-dependency-tracker",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "A NodeJS gulp package to optimize sass compilation - only compile what you actually changed.",
   "keywords": [
     "gulp",
