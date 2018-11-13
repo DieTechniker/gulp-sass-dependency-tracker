@@ -19,7 +19,7 @@ const dependencyTracker = new SassDepTracker({
 
 process.chdir('test');
 
-const globPattern = './sass/*.scss';
+const globPattern = './sass/**/*.scss';
 
 const sassOptions = {
     includePathes: [
@@ -55,6 +55,18 @@ let unrelated = new Vinyl({
     path: path.resolve('./sass/unrelated.scss')
 });
 
+let reltativeImporting = new Vinyl({
+    cwd: commonCWD,
+    base: path.join(commonBase, 'subdir'),
+    path: path.resolve('./sass/subdir/2/relative-import.scss')
+});
+
+let reltativeDependency = new Vinyl({
+    cwd: commonCWD,
+    base: path.join(commonBase, 'subdir'),
+    path: path.resolve('./sass/subdir/2/relative-dependency.scss')
+});
+
 // --- Readability helper --- //
 let childPath = path.normalize(child.path);
 
@@ -63,8 +75,8 @@ let getEntry = function(file) {
     return dependencyTracker.getTree().getEntry(file);
 };
 
-let getDependencies = () => {
-    return getEntry(child).get('dependencies');
+let getDependencies = (file = child) => {
+    return getEntry(file).get('dependencies');
 };
 
 let aggregateFilesFromStream = function(files) {
@@ -106,6 +118,11 @@ describe('SassDependencyTracker', function () {
             let partialPath = path.normalize(partialParent.path);
             assert(getDependencies().includes(partialPath), 'Partial is not listed as dependency!');
         });
+
+        it('should have resolved the relative dependency', function () {
+            let dependencyPath = path.normalize(reltativeDependency.path);
+            assert(getDependencies(reltativeImporting).includes(dependencyPath), 'Relative import is not found or unresolved!')
+        })
     });
 
     describe('#filter()', function () {

@@ -11,7 +11,8 @@ const fs = require('fs');
 
 const path = {
     isAbsolute: require('is-absolute'), // path.isAbsolute
-    resolve: require('path-resolve'), // path.resolve;
+    resolve: require('path-resolve'), // path.resolve
+    dirname: require('path-dirname'), // path.dirname
     join: require('path.join'), // path.join
     normalize: require('normalize-path'), // path.normalize
     relative: require('relative').toBase, // path.relative

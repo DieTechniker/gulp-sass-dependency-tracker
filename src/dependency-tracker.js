@@ -143,7 +143,8 @@ class DependencyTracker {
 
         let importFilePath;
         for (let inclPath of includePaths) {
-            importFilePath = resolveImport(importPath, inclPath, path.normalize(file.base));
+            let parentDir = path.normalize(path.dirname(file.path));
+            importFilePath = resolveImport(importPath, inclPath, parentDir);
 
             if (importFilePath) {
                 break;
