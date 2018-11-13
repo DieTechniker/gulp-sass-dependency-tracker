@@ -1,7 +1,7 @@
 'use strict';
 
 // General utilities
-const log = require('fancy-log');
+const logging = require('./logging');
 
 // Stream utilities
 const map = require('map-stream');
@@ -15,25 +15,6 @@ const inspectStream = require('./inspect-stream');
 
 // Ponyfill for `path`
 const path = require('./path-ponyfill');
-
-const colorSupport = require('color-support');
-const color = require('cli-color');
-
-const c = {};
-if (colorSupport.level > 0) {
-    c.success = color.greenBright;
-    c.info = color.white;
-    c.debug = color.blackBright;
-    c.warn = color.yellow;
-    c.error = color.red;
-} else {
-    let dummy = msg => msg;
-    c.success = dummy;
-    c.info = dummy;
-    c.debug = dummy;
-    c.warn = dummy;
-    c.error = dummy;
-}
 
 const SassDependencyTree = require('./dependency-tree');
 
@@ -113,7 +94,7 @@ class DependencyTracker {
         return map(function (file, cb) {
             if (!me.isOutputSuppressed()) {
                 let filePath = path.normalize(file.path);
-                log.info(c.debug(`Will be compiling: ${filePath}`));
+                logging.log.info(logging.colors.debug(`Will be compiling: ${filePath}`));
             }
             return cb(null, file);
         });
@@ -173,7 +154,7 @@ class DependencyTracker {
             this.sassTree.addDependency(file, importFilePath);
 
         } else {
-            log.warn(c.warn(`Unable to resolve dependency "${importPath} for ${filePath}`));
+            logging.log.warn(logging.colors.warn(`Unable to resolve dependency "${importPath} for ${filePath}`));
         }
     }
 
