@@ -58,14 +58,13 @@ let unrelated = new Vinyl({
 // --- Readability helper --- //
 let childPath = path.normalize(child.path);
 
-let getEntry = function(normalizedPath) {
-    normalizedPath = normalizedPath || childPath;
+let getEntry = function(file) {
     // noinspection JSDeprecatedSymbols - function created for this test purpose.
-    return dependencyTracker.getTree().get(normalizedPath);
+    return dependencyTracker.getTree().getEntry(file);
 };
 
 let getDependencies = () => {
-    return getEntry().get('dependencies');
+    return getEntry(child).get('dependencies');
 };
 
 let aggregateFilesFromStream = function(files) {
@@ -90,11 +89,11 @@ describe('SassDependencyTracker', function () {
 
     describe('#inspect()', function () {
         it('recognized child', function () {
-            assert.notEqual(getEntry(), null, `Template was not tracked as: ${childPath}!`)
+            assert.notEqual(getEntry(child), null, `Template was not tracked as: ${childPath}!`)
         });
 
         it('should have two dependencies for child', function () {
-            let dependencies = getEntry().get('dependencies');
+            let dependencies = getEntry(child).get('dependencies');
             assert.equal(dependencies.length, 2, 'Dependencies count does not match!')
         });
 
@@ -124,8 +123,8 @@ describe('SassDependencyTracker', function () {
 
         it('marks two files as dirty', function () {
             dependencyTracker.queueRebuild(path.normalize(partialParent.path));
-            assert(getEntry(path.normalize(partialParent.path)).get('recompile') === true, 'Partial not queued for rebuild!');
-            assert(getEntry(path.normalize(child.path)).get('recompile') === true, 'Child not queued for rebuild!');
+            assert(getEntry(partialParent).get('recompile') === true, 'Partial not queued for rebuild!');
+            assert(getEntry(child).get('recompile') === true, 'Child not queued for rebuild!');
         });
 
         it('will include child when partial changes', function () {
@@ -163,8 +162,8 @@ describe('SassDependencyTracker', function () {
                     })
                     .on('error', reject);
             }).then(function () {
-                assert.strictEqual(getEntry(path.normalize(child.path)).get('recompile'), false, 'Child still dirty!');
-                assert.strictEqual(getEntry(path.normalize(partialParent.path)).get('recompile'), false, 'Partial still dirty!');
+                assert.strictEqual(getEntry(child).get('recompile'), false, 'Child still dirty!');
+                assert.strictEqual(getEntry(partialParent).get('recompile'), false, 'Partial still dirty!');
             });
         })
     });
