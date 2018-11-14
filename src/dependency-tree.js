@@ -75,7 +75,7 @@ class SassDependencyTree {
         let sourceFilePath = fileArgumentToNormalizedPath(sourceFile);
         let dependencyPath = fileArgumentToNormalizedPath(dependencyFile);
 
-        if (this[_isDebug] && !this[_isOutputSuppressed]) {
+        if (this[_isDebug]() && !this[_isOutputSuppressed]()) {
             logging.log.info(logging.colors.debug(`Dependency added: ${sourceFilePath} => ${dependencyPath}`));
         }
 
@@ -94,7 +94,7 @@ class SassDependencyTree {
         let sourceFilePath = fileArgumentToNormalizedPath(sourceFile);
         let dependencyPath = fileArgumentToNormalizedPath(dependencyFile);
 
-        if (this[_isDebug] && !this[_isOutputSuppressed]) {
+        if (this[_isDebug]() && !this[_isOutputSuppressed]()) {
             logging.log.info(logging.colors.debug(`Dependency removed: ${sourceFilePath} =/=> ${dependencyPath}`));
         }
 
@@ -137,7 +137,7 @@ class SassDependencyTree {
         let sourceFilePath = fileArgumentToNormalizedPath(sourceFile);
         let entry = this[_getOrCreateEntry](sourceFilePath);
 
-        if (this[_isDebug] && !this[_isOutputSuppressed]) {
+        if (this[_isDebug]() && !this[_isOutputSuppressed]()) {
             logging.log.info(logging.colors.debug(`AsCompiled: ${sourceFilePath}`));
         }
 
@@ -156,7 +156,7 @@ class SassDependencyTree {
         let entry = this[_getOrCreateEntry](sourceFilePath);
         entry.set('recompile', true);
 
-        if (this[_isDebug] && !this[_isOutputSuppressed]) {
+        if (this[_isDebug]() && !this[_isOutputSuppressed]()) {
             logging.log.info(logging.colors.debug(`Marking for recompilation: ${sourceFilePath}`));
         }
 

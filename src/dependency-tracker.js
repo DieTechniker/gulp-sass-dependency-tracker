@@ -141,6 +141,10 @@ class DependencyTracker {
         let regex = RegExp(importRegex.source, importRegex.flags);
         let importPath = regex.exec(match)[1];
 
+        if (this.isDebug() && !this.isOutputSuppressed()) {
+            logging.log.info(logging.colors.debug(`Found import: "${importPath}" in ${filePath}`));
+        }
+
         let importFilePath;
         for (let inclPath of includePaths) {
             let parentDir = path.normalize(path.dirname(file.path));
