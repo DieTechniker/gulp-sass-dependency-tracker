@@ -158,7 +158,7 @@ class DependencyTracker {
         if (importFilePath) {
             this.sassTree.addDependency(file, importFilePath);
 
-        } else {
+        } else if (!this.isOutputSuppressed()) {
             logging.log.warn(logging.colors.warn(`Unable to resolve dependency "${importPath} for ${filePath}`));
         }
     }

@@ -89,6 +89,6 @@ There are two kinds of options:
   ```js
     {
       debug: false // Whether or not to provide debug log message (e.g. from the dependency detection)  
-      suppressOutput: false // Whether or not to suppress all console messages (does not apply to debug output!)
+      suppressOutput: false // Whether or not to suppress all console messages
     }
   ```
