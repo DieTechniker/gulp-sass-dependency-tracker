@@ -19,6 +19,7 @@ const path = require('./path-ponyfill');
 const SassDependencyTree = require('./dependency-tree');
 
 const importRegex = /@import ['"]([\w./-]+)['"];/g;
+let partialExclusionWarning = true;
 
 /**
  * Main class of a helpful module for sass compilation tasks with GulpJS.
@@ -94,7 +95,17 @@ class DependencyTracker {
         return map(function (file, cb) {
             if (!me.isOutputSuppressed()) {
                 let filePath = path.normalize(file.path);
-                logging.log.info(logging.colors.debug(`Will be compiling: ${filePath}`));
+                let baseName = path.basename(file.path);
+
+                if (!baseName.startsWith('_')) {
+                    logging.log.info(logging.colors.debug(`Will be compiling: ${filePath}`));
+                } else if (partialExclusionWarning) {
+                    partialExclusionWarning = false;
+                    logging.log.warn(logging.colors.warn('Partials have been encountered in your stream.'));
+                    logging.log.warn(logging.colors.info('Be aware that they will not be compiled by gulp-sass and thus cannot be properly filtered.'));
+                    logging.log.warn(logging.colors.info('See https://github.com/DieTechniker/gulp-sass-dependency-tracker/issues/3 for more information.'));
+                    logging.log.warn(logging.colors.info('This message will not be displayed again during this runtime.'))
+                }
             }
             return cb(null, file);
         });

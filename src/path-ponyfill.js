@@ -16,6 +16,7 @@ const path = {
     join: require('path.join'), // path.join
     normalize: require('normalize-path'), // path.normalize
     relative: require('relative').toBase, // path.relative
+    basename: require('basename'), //path.basename
     exists: function (file) { // path.existsSync
         file = path.normalize(file);
         return fs.existsSync(path.resolve(file))
