@@ -55,13 +55,13 @@ let unrelated = new Vinyl({
     path: path.resolve('./sass/unrelated.scss')
 });
 
-let reltativeImporting = new Vinyl({
+let relativeImporting = new Vinyl({
     cwd: commonCWD,
     base: path.join(commonBase, 'subdir'),
     path: path.resolve('./sass/subdir/2/relative-import.scss')
 });
 
-let reltativeDependency = new Vinyl({
+let relativeDependency = new Vinyl({
     cwd: commonCWD,
     base: path.join(commonBase, 'subdir'),
     path: path.resolve('./sass/subdir/2/relative-dependency.scss')
@@ -120,8 +120,8 @@ describe('SassDependencyTracker', function () {
         });
 
         it('should have resolved the relative dependency', function () {
-            let dependencyPath = path.normalize(reltativeDependency.path);
-            assert(getDependencies(reltativeImporting).includes(dependencyPath), 'Relative import is not found or unresolved!')
+            let dependencyPath = path.normalize(relativeDependency.path);
+            assert(getDependencies(relativeImporting).includes(dependencyPath), 'Relative import is not found or unresolved!')
         })
     });
 
@@ -155,6 +155,7 @@ describe('SassDependencyTracker', function () {
                         resolve();
                     })
                     .on('error', reject);
+
             }).then(function () {
                 assert(files.includes(path.normalize(child.path)), 'Child not included!');
                 assert(!files.includes(path.normalize(parent.path)), 'Parent not filtered!');
@@ -166,8 +167,6 @@ describe('SassDependencyTracker', function () {
 
     describe('#reportCompiled()', function () {
         it('will remove files from being dirty upon recompilation - even if renamed', function () {
-
-            let files = [];
             return new Promise(function (resolve, reject) {
                 gulp.src(globPattern)
                     .pipe(gRename(function (file) {
@@ -182,6 +181,6 @@ describe('SassDependencyTracker', function () {
                 assert.strictEqual(getEntry(child).get('recompile'), false, 'Child still dirty!');
                 assert.strictEqual(getEntry(partialParent).get('recompile'), false, 'Partial still dirty!');
             });
-        })
+        });
     });
 });
