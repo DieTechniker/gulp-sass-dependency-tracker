@@ -17,7 +17,7 @@ function resolveSassImport(importPath, includePath, contextPath) {
         importPath = importPath + '.scss';
     }
 
-    let absoluteIncludePath = includePath;
+    let absoluteIncludePath = path.normalize(includePath);
     if (!path.isAbsolute(includePath)) {
         absoluteIncludePath = path.normalize(path.join(process.cwd(), includePath));
     }
