@@ -14,7 +14,7 @@ Firstly, here's a quick example:
 const SassDepTracker = require('@dietechniker/gulp-sass-dependency-tracker');
 const sassDepTracker = new SassDepTracker();
 
-const fileGlob = 'resources/sass/**/*.scss';
+const fileGlob = 'resources/sass/**/*.s[a|c]ss';
 
 gulp.task('sass', function () {
     gulp.src(fileGlob)
@@ -89,6 +89,7 @@ There are two kinds of options:
   ```js
     {
       debug: false // Whether or not to provide debug log message (e.g. from the dependency detection)  
-      suppressOutput: false // Whether or not to suppress all console messages
+      suppressOutput: false // Whether or not to suppress all console messages,
+      filterNonSass: false // Whether or ot to exclude non-sass files from the stream when running through #filter
     }
   ```
