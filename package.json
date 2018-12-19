@@ -4,6 +4,7 @@
   "description": "A NodeJS gulp package to optimize sass compilation - only compile what you actually changed.",
   "keywords": [
     "gulp",
+    "gulpplugin",
     "sass",
     "dependency",
     "import",
