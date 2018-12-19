@@ -19,7 +19,7 @@ const dependencyTracker = new SassDepTracker({
 
 process.chdir('test');
 
-const globPattern = './sass/**/*.scss';
+const globPattern = './sass/**/*.s[c|a]ss';
 
 const sassOptions = {
     includePathes: [
@@ -65,6 +65,13 @@ let relativeDependency = new Vinyl({
     cwd: commonCWD,
     base: path.join(commonBase, 'subdir'),
     path: path.resolve('./sass/subdir/2/relative-dependency.scss')
+});
+
+
+let sassyFile = new Vinyl({
+    cwd: commonCWD,
+    base: commonBase,
+    path: path.resolve('./sass/sassfile.sass')
 });
 
 // --- Readability helper --- //
@@ -183,4 +190,61 @@ describe('SassDependencyTracker', function () {
             });
         });
     });
+});
+
+describe('Sass-Syntax-Support', function () {
+    before(function (cb) {
+        dependencyTracker.reset();
+        gulp.src(globPattern)
+            .pipe(dependencyTracker.inspect(sassOptions))
+            .pipe(dependencyTracker.logFiles())
+            .pipe(dependencyTracker.reportCompiled())
+            .on('end', cb);
+    });
+
+    describe('#inspect()', function () {
+
+        it('should record that file', function () {
+            let entry = dependencyTracker.getTree().getEntry(sassyFile);
+            assert(entry !== null && entry !== undefined, 'Sass file has not been recorded in the tree!')
+        });
+
+        it('should list parent.scss as a dependency', function () {
+            assert(getDependencies(sassyFile).includes(path.normalize(parent.path)), 'Import has not been detected!');
+        });
+
+        it('should be recompiled when changed', function () {
+            dependencyTracker.queueRebuild(sassyFile);
+            let files = [];
+            return new Promise(function (resolve, reject) {
+                gulp.src(globPattern)
+                    .pipe(dependencyTracker.filter())
+                    .pipe(aggregateFilesFromStream(files))
+                    .on('end', function () {
+                        resolve();
+                    })
+                    .on('error', reject);
+
+            }).then(function () {
+                assert(files.includes(path.normalize(sassyFile.path)) === true, 'Sassy file would not be recompiled!');
+            });
+        });
+
+        it('should not recompile when reported as compiled', function () {
+            return new Promise(function (resolve, reject) {
+                gulp.src(globPattern)
+                    .pipe(gRename(function (file) {
+                        file.extname += '.css'
+                    }))
+                    .pipe(dependencyTracker.reportCompiled())
+                    .on('end', function () {
+                        resolve();
+                    })
+                    .on('error', reject);
+
+            }).then(function () {
+                assert.strictEqual(getEntry(sassyFile).get('recompile'), false, 'Sassy file still dirty!');
+            });
+        })
+    })
 });

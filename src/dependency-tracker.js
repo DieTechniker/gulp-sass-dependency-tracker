@@ -18,7 +18,7 @@ const path = require('./path-ponyfill');
 
 const SassDependencyTree = require('./dependency-tree');
 
-const importRegex = /@import ['"]([\w./-]+)['"];/g;
+const importRegex = /@import ['"]?([\w./-]+)(?:['"];)?/g;
 
 /**
  * Main class of a helpful module for sass compilation tasks with GulpJS.
@@ -38,13 +38,14 @@ class DependencyTracker {
     /**
      * Constructs a new tracker instance.
      */
-    constructor(options = {debug: false, suppressOutput: false}) {
+    constructor(options = {debug: false, suppressOutput: false, filterNonSass: false}) {
         this.sassTree = new SassDependencyTree(options);
         this.options = options;
     }
 
     /**
      * Internal method for checking the debug setting.
+     * @return {boolean}
      */
     isDebug() {
         return this.options.debug || false;
@@ -52,9 +53,18 @@ class DependencyTracker {
 
     /**
      * Internal function for checking if the output should be suppressed.
+     * @return {boolean}
      */
     isOutputSuppressed() {
         return this.options.suppressOutput || false;
+    }
+
+    /**
+     * Whether or not non-sass files will be removed from the stream by {@link filter}
+     * @return {boolean}
+     */
+    isNonSassFiltered() {
+        return this.option.filterNonSass || false;
     }
 
     /**
@@ -64,8 +74,15 @@ class DependencyTracker {
      */
     filter() {
         const me = this;
-        return gIgnore.include(function (file) {
-            return !file.path.endsWith('.scss') || !me.getTree().isCompiled(file);
+        const isSassFile = file => {
+            return file.path.endsWith('.scss') || file.path.endsWith('.sass')
+        };
+
+        return gIgnore.exclude(function (file) {
+            // Exclude the file when:
+            // * It is a non-sass file and should be excluded
+            // * OR: It is tracked as compiled
+            return (!isSassFile(file) && me.isNonSassFiltered()) || me.getTree().isCompiled(file);
         });
     }
 
@@ -78,7 +95,7 @@ class DependencyTracker {
     inspect(sassOptions) {
         const me = this;
         return inspectStream(importRegex, function (match, file) {
-            if (file.path.endsWith('.scss')) {
+            if (file.path.endsWith('.scss') || file.path.endsWith('.sass')) {
                 me.reportImport(match, file, sassOptions);
             }
         });
@@ -112,7 +129,7 @@ class DependencyTracker {
             // Support for renaming files.
             // Search for the earliest name ending in the scss extension.
             for (let filePath of file.history) {
-                if (filePath.endsWith('.scss')) {
+                if (filePath.endsWith('.scss') || filePath.endsWith('.sass')) {
                     me.getTree().markAsCompiled(filePath);
                 }
             }
@@ -140,6 +157,10 @@ class DependencyTracker {
         let filePath = path.normalize(file.path);
         let regex = RegExp(importRegex.source, importRegex.flags);
         let importPath = regex.exec(match)[1];
+
+        if (importPath === null || importPath === undefined) {
+            throw new Error(`No regex group for import match: ${match}`);
+        }
 
         if (this.isDebug() && !this.isOutputSuppressed()) {
             logging.log.info(logging.colors.debug(`Found import: "${importPath}" in ${filePath}`));
