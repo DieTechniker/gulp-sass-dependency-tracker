@@ -34,7 +34,7 @@
     "normalize-path": "^3.0.0",
     "path-resolve": "0.0.1",
     "path.join": "^1.0.0",
-    "readable-stream": "^3.0.6",
+    "readable-stream": "^3.2.0",
     "relative": "^3.0.2"
   },
   "engines": {
